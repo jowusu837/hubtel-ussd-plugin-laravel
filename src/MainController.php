@@ -68,7 +68,7 @@ class MainController extends Controller
             return $this->_success($activity->run($this->request, $this->session));
 
         } catch (Exception $e) {
-            \Log::error($e->getMessage(), $e);
+            \Log::error($e->getMessage(), $e->getTrace());
             return $this->_error("Oops! Something isn't right. Please try again later.");
         }
     }

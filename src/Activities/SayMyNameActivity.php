@@ -9,8 +9,8 @@
 namespace Jowusu837\HubtelUssd\Activities;
 
 
-use App\Ussd\Lib\IUssdActivity;
-use App\Ussd\Lib\UssdRequest;
+use Jowusu837\HubtelUssd\Lib\IUssdActivity;
+use Jowusu837\HubtelUssd\Lib\UssdRequest;
 
 class SayMyNameActivity implements IUssdActivity
 {

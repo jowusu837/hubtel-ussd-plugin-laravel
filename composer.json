@@ -21,7 +21,7 @@
         "Jowusu837\\HubtelUssd\\ServiceProvider"
       ],
       "aliases": {
-        "HubtelMerchantAccount": "Jowusu837\\HubtelUssd\\Facade"
+        "HubtelUssd": "Jowusu837\\HubtelUssd\\Facade"
       }
     }
   },

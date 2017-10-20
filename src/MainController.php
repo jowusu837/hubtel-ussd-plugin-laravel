@@ -2,12 +2,13 @@
 
 namespace Jowusu837\HubtelUssd;
 
-use App\Ussd\Activities\HomeActivity;
-use App\Ussd\Lib\IUssdActivity;
-use App\Ussd\Lib\UssdRequest;
-use App\Ussd\Lib\UssdResponse;
+use Jowusu837\HubtelUssd\Activities\HomeActivity;
+use Jowusu837\HubtelUssd\Lib\IUssdActivity;
+use Jowusu837\HubtelUssd\Lib\UssdRequest;
+use Jowusu837\HubtelUssd\Lib\UssdResponse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Cache;
 use Exception;
 

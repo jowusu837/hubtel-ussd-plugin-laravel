@@ -1,0 +1,28 @@
+{
+  "name": "jowusu837/hubtel-ussd-plugin-laravel",
+  "description": "Hubtel USSD plugin for easy integration into Laravel projects",
+  "keywords": ["laravel", "ussd", "hubtel", "plugin", "sms"],
+  "minimum-stability": "dev",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Victor J. Owusu",
+      "email": "jowusu837@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Jowusu837\\HubtelUssd\\": "src"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Jowusu837\\HubtelUssd\\ServiceProvider"
+      ],
+      "aliases": {
+        "HubtelMerchantAccount": "Jowusu837\\HubtelUssd\\Facade"
+      }
+    }
+  }
+}

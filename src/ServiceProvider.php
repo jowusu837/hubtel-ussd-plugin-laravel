@@ -20,8 +20,6 @@ class ServiceProvider extends BaseServiceProvider
             $publishPath = base_path('config/hubtel-ussd.php');
         }
         $this->publishes([$this->configPath() => $publishPath], 'config');
-
-        $this->loadRoutesFrom(__DIR__.'/routes.php');
     }
 
     /**
@@ -32,6 +30,7 @@ class ServiceProvider extends BaseServiceProvider
     public function register()
     {
         $this->mergeConfigFrom($this->configPath(), 'hubtel-ussd');
+        $this->loadRoutesFrom(__DIR__.'/routes.php');
     }
 
     protected function configPath() {

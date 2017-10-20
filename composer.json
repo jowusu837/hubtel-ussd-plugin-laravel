@@ -24,5 +24,8 @@
         "HubtelMerchantAccount": "Jowusu837\\HubtelUssd\\Facade"
       }
     }
+  },
+  "require": {
+    "nesbot/carbon": "^1.22"
   }
 }

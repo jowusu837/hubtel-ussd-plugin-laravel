@@ -2,6 +2,7 @@
 
 namespace Jowusu837\HubtelUssd;
 
+use Illuminate\Support\Facades\Cache;
 use Jowusu837\HubtelUssd\Activities\HomeActivity;
 use Jowusu837\HubtelUssd\Lib\IUssdActivity;
 use Jowusu837\HubtelUssd\Lib\UssdRequest;
@@ -9,7 +10,6 @@ use Jowusu837\HubtelUssd\Lib\UssdResponse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Cache;
 use Exception;
 
 class MainController extends Controller
@@ -101,7 +101,7 @@ class MainController extends Controller
      */
     protected function initializeNextActivity()
     {
-        $previous_requested = $this->request->Message == env('USSD_BACK_CODE');
+        $previous_requested = $this->request->Message == env('USSD_BACK_CODE', '#');
 
         $next_activity_class = $previous_requested ? $this->session['previous_activity'] : $this->session['next_activity'];
 
@@ -146,7 +146,7 @@ class MainController extends Controller
 
         $updatedData = $oldSessionData ? array_merge($oldSessionData, $data) : $data;
 
-        $expiresAt = Carbon::now()->addMinutes(env('USSD_SESSION_LIFETIME_IN_MINUTES'));
+        $expiresAt = Carbon::now()->addMinutes(env('USSD_SESSION_LIFETIME_IN_MINUTES', 5));
 
         $this->cache->put($this->sessionId, $updatedData, $expiresAt);
 

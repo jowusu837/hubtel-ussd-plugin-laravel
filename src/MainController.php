@@ -106,7 +106,7 @@ class MainController extends Controller
         $next_activity_class = $previous_requested ? $this->session['previous_activity'] : $this->session['next_activity'];
 
         if (!$next_activity_class) {
-            $next_activity_class = HomeActivity::class;
+            $next_activity_class = config('hubtel-ussd.home', HomeActivity::class);
         }
 
         $activity = new $next_activity_class;

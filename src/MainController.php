@@ -43,7 +43,7 @@ class MainController extends Controller
      * User session state
      * @var mixed|null
      */
-    protected $session;
+    protected $session = [];
 
     /**
      * Create a new controller instance.
@@ -102,7 +102,11 @@ class MainController extends Controller
     {
         $previous_requested = $this->request->Message == env('USSD_BACK_CODE', '#');
 
-        $next_activity_class = $previous_requested ? $this->session['previous_activity'] : $this->session['next_activity'];
+        $previous_activity = isset($this->session['previous_activity']) ? $this->session['previous_activity'] : null;
+
+        $next_activity = isset($this->session['next_activity']) ? $this->session['next_activity'] : null;
+
+        $next_activity_class = $previous_requested ? $previous_activity : $next_activity;
 
         if (!$next_activity_class) {
             $next_activity_class = config('hubtel-ussd.home', HomeActivity::class);
@@ -130,7 +134,7 @@ class MainController extends Controller
             return $this->cache->get($this->sessionId);
         }
 
-        return null;
+        return [];
     }
 
     /**
@@ -144,7 +148,7 @@ class MainController extends Controller
 
         $oldSessionData = $this->retrieveSession();
 
-        $updatedData = $oldSessionData ? array_merge($oldSessionData, $data) : $data;
+        $updatedData = !empty($oldSessionData) ? array_merge($oldSessionData, $data) : $data;
 
         $expiresAt = Carbon::now()->addMinutes(env('USSD_SESSION_LIFETIME_IN_MINUTES', 5));
 

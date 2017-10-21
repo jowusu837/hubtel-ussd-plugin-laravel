@@ -3,7 +3,10 @@
 namespace Jowusu837\HubtelUssd;
 
 use Illuminate\Support\Facades\Cache;
+use Jowusu837\HubtelUssd\Activities\HijackSessionActivity;
 use Jowusu837\HubtelUssd\Activities\HomeActivity;
+use Jowusu837\HubtelUssd\Activities\ReleaseActivity;
+use Jowusu837\HubtelUssd\Activities\TimeOutActivity;
 use Jowusu837\HubtelUssd\Lib\UssdActivity;
 use Jowusu837\HubtelUssd\Lib\UssdRequest;
 use Jowusu837\HubtelUssd\Lib\UssdResponse;
@@ -72,7 +75,34 @@ class MainController extends Controller
     public function index()
     {
         try {
-            $activity = $this->initializeNextActivity()->run();
+
+            switch ($this->request->Type) {
+
+                case UssdRequest::INITIATION:
+                    $activity = $this->processInitiationRequest();
+                    break;
+
+                case UssdRequest::RELEASE:
+                    $activity = $this->processReleaseRequest();
+                    break;
+
+                case UssdRequest::TIMEOUT:
+                    $activity = $this->processTimeoutRequest();
+                    break;
+
+                case UssdRequest::RESPONSE:
+                    $activity = $this->processResponseRequest();
+                    break;
+
+                case UssdRequest::HIJACKSESSION:
+                    $activity = $this->processHijackSessionRequest();
+                    break;
+
+                default:
+                    throw new Exception("Unknown request");
+                    break;
+
+            }
 
             // Session might have changed during activity:
             $this->updateSession($activity->getSession());
@@ -91,27 +121,6 @@ class MainController extends Controller
             $this->response->Type = UssdResponse::RELEASE;
             $this->response->Message = "Oops! Something isn't right. Please try again later.";
             return $this->sendResponse();
-        }
-    }
-
-    /**
-     * Get where next the user must go
-     * @return UssdActivity
-     */
-    protected function initializeNextActivity()
-    {
-        if ($this->request->Type == UssdRequest::INITIATION || !isset($this->session['activity'])) {
-            $this->session['activity'] = config('hubtel-ussd.home', HomeActivity::class);
-            return new $this->session['activity']($this->request, $this->response, $this->session);
-        }
-
-        $activity = new $this->session['activity']($this->request, $this->response, $this->session);
-
-        if($this->request->Message == env('USSD_BACK_CODE', '#')) {
-            return $activity;
-        }else {
-            $className = $activity->next();
-            return new $className($this->request, $this->response, $this->session);
         }
     }
 
@@ -157,5 +166,65 @@ class MainController extends Controller
     private function sendResponse()
     {
         return response()->json($this->response);
+    }
+
+    /**
+     * @return UssdActivity|void
+     */
+    private function processInitiationRequest()
+    {
+        $className = config('hubtel-ussd.home', HomeActivity::class);
+        $this->session['activity'] = $className;
+
+        /** @var UssdActivity $activity */
+        $activity = new $className($this->request, $this->response, $this->session);
+
+        return $activity->run();
+    }
+
+    private function processResponseRequest()
+    {
+        $className = $this->session['activity'];
+
+        /** @var UssdActivity $activity */
+        $activity = new $className($this->request, $this->response, $this->session);
+
+        // Handle back action
+        if ($this->request->Message != env('USSD_BACK_CODE', '#')) {
+            $className = $activity->next();
+            $activity = new $className($this->request, $this->response, $this->session);
+        }
+
+        return $activity->run();
+    }
+
+    private function processReleaseRequest()
+    {
+        $className = config('hubtel-ussd.release', ReleaseActivity::class);
+
+        /** @var UssdActivity $activity */
+        $activity = new $className($this->request, $this->response, $this->session);
+
+        return $activity->run();
+    }
+
+    private function processTimeoutRequest()
+    {
+        $className = config('hubtel-ussd.timeout', TimeOutActivity::class);
+
+        /** @var UssdActivity $activity */
+        $activity = new $className($this->request, $this->response, $this->session);
+
+        return $activity->run();
+    }
+
+    private function processHijackSessionRequest()
+    {
+        $className = config('hubtel-ussd.hijack_session', HijackSessionActivity::class);
+
+        /** @var UssdActivity $activity */
+        $activity = new $className($this->request, $this->response, $this->session);
+
+        return $activity->run();
     }
 }

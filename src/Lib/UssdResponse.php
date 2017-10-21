@@ -54,5 +54,10 @@ class UssdResponse {
      * @var bool
      */
    public $MaskNextRoute;
-    
+
+   public function __construct()
+   {
+       $this->Type = self::RESPONSE;
+   }
+
 }

@@ -75,7 +75,7 @@ class MainController extends Controller
             $activity = $this->initializeNextActivity()->run();
 
             // Session might have changed during activity:
-            $this->updateSession(array_merge($activity->getSession(), ["next_activity" => $activity->next()]));
+            $this->updateSession($activity->getSession());
 
             // Get updated response from activity
             $this->response = $activity->getResponse();
@@ -100,24 +100,16 @@ class MainController extends Controller
      */
     protected function initializeNextActivity()
     {
-        $previous_requested = $this->request->Message == env('USSD_BACK_CODE', '#');
 
-        $previous_activity = isset($this->session['previous_activity']) ? $this->session['previous_activity'] : null;
+        $current_activity_class = isset($this->session['activity']) ? $this->session['activity'] : config('hubtel-ussd.home', HomeActivity::class);
 
-        $next_activity = isset($this->session['next_activity']) ? $this->session['next_activity'] : null;
+        $current_activity = new $current_activity_class($this->request, $this->response, $this->session);
 
-        $next_activity_class = $previous_requested ? $previous_activity : $next_activity;
+        $next_activity_class = ($this->request->Message == env('USSD_BACK_CODE', '#')) ? $current_activity_class : $current_activity->next();
 
-        if (!$next_activity_class) {
-            $next_activity_class = config('hubtel-ussd.home', HomeActivity::class);
-        }
+        $this->updateSession(['activity' => $next_activity_class]);
 
-        /** @var UssdActivity $activity */
-        $activity = new $next_activity_class($this->request, $this->response, $this->session);
-
-        $this->updateSession(['previous_activity' => $next_activity_class]);
-
-        return $activity;
+        return new $next_activity_class($this->request, $this->response, $this->session);;
     }
 
     /**

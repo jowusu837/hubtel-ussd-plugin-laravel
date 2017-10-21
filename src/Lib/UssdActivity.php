@@ -30,6 +30,12 @@ class UssdActivity implements IUssdActivity
     protected $session;
 
     /**
+     * Stores next activity
+     * @var
+     */
+    protected $nextActivity;
+
+    /**
      * UssdActivity constructor.
      *
      * @param UssdRequest $request
@@ -50,7 +56,7 @@ class UssdActivity implements IUssdActivity
 
     public function next()
     {
-        // TODO: Implement next() method.
+        return $this->nextActivity;
     }
 
     /**

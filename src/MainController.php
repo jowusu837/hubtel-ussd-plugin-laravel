@@ -75,7 +75,7 @@ class MainController extends Controller
             $activity = $this->initializeNextActivity()->run();
 
             // Session might have changed during activity:
-            $this->updateSession($activity->getSession());
+            $this->updateSession(array_merge($activity->getSession(), ["next_activity" => $activity->next()]));
 
             // Get updated response from activity
             $this->response = $activity->getResponse();
@@ -115,10 +115,7 @@ class MainController extends Controller
         /** @var UssdActivity $activity */
         $activity = new $next_activity_class($this->request, $this->response, $this->session);
 
-        $this->updateSession([
-            'next_activity' => $activity->next(),
-            'previous_activity' => $next_activity_class
-        ]);
+        $this->updateSession(['previous_activity' => $next_activity_class]);
 
         return $activity;
     }

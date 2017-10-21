@@ -5,6 +5,7 @@ namespace Jowusu837\HubtelUssd;
 use Illuminate\Support\Facades\Cache;
 use Jowusu837\HubtelUssd\Activities\HomeActivity;
 use Jowusu837\HubtelUssd\Lib\IUssdActivity;
+use Jowusu837\HubtelUssd\Lib\UssdActivity;
 use Jowusu837\HubtelUssd\Lib\UssdRequest;
 use Jowusu837\HubtelUssd\Lib\UssdResponse;
 use Carbon\Carbon;
@@ -50,7 +51,7 @@ class MainController extends Controller
 
         // Set request
         $this->request = (object)$request->json()->all();
-        $this->sessionId = 'ussd_session_' . $this->request->SessionId;
+        $this->sessionId = 'hubtel_ussd_session_' . $this->request->SessionId;
 
         // Check if cache is set
         $this->session = $this->retrieveSession();
@@ -64,12 +65,25 @@ class MainController extends Controller
     public function index()
     {
         try {
-            $activity = $this->initializeNextActivity();
-            return $this->_success($activity->run($this->request, $this->session));
+            $activity = $this->initializeNextActivity()->run();
+
+            // Session might have changed during activity:
+            $this->updateSession($activity->getSession());
+
+            // Get updated response from activity
+            $this->response = $activity->getResponse();
+
+            return response()->json($this->response);
 
         } catch (Exception $e) {
+
+            // Let's log the error first
             \Log::error($e->getMessage(), $e->getTrace());
-            return $this->_error("Oops! Something isn't right. Please try again later.");
+
+            // ... then we inform the user
+            $this->response->Type = UssdResponse::RELEASE;
+            $this->response->Message = "Oops! Something isn't right. Please try again later.";
+            return response()->json($this->response);
         }
     }
 
@@ -97,7 +111,7 @@ class MainController extends Controller
 
     /**
      * Get where next the user must go
-     * @return IUssdActivity
+     * @return UssdActivity
      */
     protected function initializeNextActivity()
     {
@@ -109,7 +123,8 @@ class MainController extends Controller
             $next_activity_class = config('hubtel-ussd.home', HomeActivity::class);
         }
 
-        $activity = new $next_activity_class;
+        /** @var UssdActivity $activity */
+        $activity = new $next_activity_class($this->request, $this->response, $this->session);
 
         $this->updateSession([
             'next_activity' => $activity->next(),

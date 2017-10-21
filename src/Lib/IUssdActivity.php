@@ -9,12 +9,10 @@ namespace Jowusu837\HubtelUssd\Lib;
 interface IUssdActivity
 {
     /**
-     * This is the main entry point for this action
-     * @param UssdRequest $request
-     * @param array $session
-     * @return mixed
+     * Entry point for this activity.
+     * @return UssdActivity
      */
-    public function run($request, $session);
+    public function run();
 
     /**
      * The next action to be executed

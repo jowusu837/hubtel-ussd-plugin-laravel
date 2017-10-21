@@ -100,16 +100,19 @@ class MainController extends Controller
      */
     protected function initializeNextActivity()
     {
+        if ($this->request->Type == UssdRequest::INITIATION || !isset($this->session['activity'])) {
+            $this->session['activity'] = config('hubtel-ussd.home', HomeActivity::class);
+            return new $this->session['activity']($this->request, $this->response, $this->session);
+        }
 
-        $current_activity_class = isset($this->session['activity']) ? $this->session['activity'] : config('hubtel-ussd.home', HomeActivity::class);
+        $activity = new $this->session['activity']($this->request, $this->response, $this->session);
 
-        $current_activity = new $current_activity_class($this->request, $this->response, $this->session);
-
-        $next_activity_class = ($this->request->Message == env('USSD_BACK_CODE', '#')) ? $current_activity_class : $current_activity->next();
-
-        $this->updateSession(['activity' => $next_activity_class]);
-
-        return new $next_activity_class($this->request, $this->response, $this->session);;
+        if($this->request->Message == env('USSD_BACK_CODE', '#')) {
+            return $activity;
+        }else {
+            $className = $activity->next();
+            return new $className($this->request, $this->response, $this->session);
+        }
     }
 
     /**

@@ -4,7 +4,6 @@ namespace Jowusu837\HubtelUssd;
 
 use Illuminate\Support\Facades\Cache;
 use Jowusu837\HubtelUssd\Activities\HomeActivity;
-use Jowusu837\HubtelUssd\Lib\IUssdActivity;
 use Jowusu837\HubtelUssd\Lib\UssdActivity;
 use Jowusu837\HubtelUssd\Lib\UssdRequest;
 use Jowusu837\HubtelUssd\Lib\UssdResponse;
@@ -16,11 +15,13 @@ use Exception;
 class MainController extends Controller
 {
     /**
+     * Next ussd response to be sent
      * @var UssdResponse
      */
     protected $response;
 
     /**
+     * Current ussd request
      * @var UssdRequest
      */
     protected $request;
@@ -37,6 +38,12 @@ class MainController extends Controller
      * @var \Illuminate\Contracts\Cache\Repository
      */
     protected $cache;
+
+    /**
+     * User session state
+     * @var mixed|null
+     */
+    protected $session;
 
     /**
      * Create a new controller instance.
@@ -73,7 +80,7 @@ class MainController extends Controller
             // Get updated response from activity
             $this->response = $activity->getResponse();
 
-            return response()->json($this->response);
+            return $this->sendResponse();
 
         } catch (Exception $e) {
 
@@ -83,30 +90,8 @@ class MainController extends Controller
             // ... then we inform the user
             $this->response->Type = UssdResponse::RELEASE;
             $this->response->Message = "Oops! Something isn't right. Please try again later.";
-            return response()->json($this->response);
+            return $this->sendResponse();
         }
-    }
-
-    protected function _formatResponse($type, $message)
-    {
-        $this->response->Type = $type;
-        $this->response->Message = $message;
-        return response()->json($this->response);
-    }
-
-    protected function _success($message)
-    {
-        return $this->_formatResponse(UssdRequest::RESPONSE, $message);
-    }
-
-    protected function _done($message)
-    {
-        return $this->_formatResponse(UssdResponse::RELEASE, $message);
-    }
-
-    protected function _error($message = 'Unknown error!')
-    {
-        return $this->_formatResponse(UssdResponse::RELEASE, $message);
     }
 
     /**
@@ -166,5 +151,15 @@ class MainController extends Controller
         $this->cache->put($this->sessionId, $updatedData, $expiresAt);
 
         $this->session = $updatedData;
+    }
+
+    /**
+     * Send final response to user
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function sendResponse()
+    {
+        return response()->json($this->response);
     }
 }

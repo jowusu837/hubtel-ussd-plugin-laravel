@@ -105,7 +105,7 @@ class MainController extends Controller
             }
 
             // Session might have changed during activity:
-            $this->updateSession($activity->getSession());
+            $this->updateSession(array_merge($activity->getSession(), ['activity' => get_class($activity)]));
 
             // Get updated response from activity
             $this->response = $activity->getResponse();
@@ -174,7 +174,6 @@ class MainController extends Controller
     private function processInitiationRequest()
     {
         $className = config('hubtel-ussd.home', HomeActivity::class);
-        $this->session['activity'] = $className;
 
         /** @var UssdActivity $activity */
         $activity = new $className($this->request, $this->response, $this->session);

@@ -188,11 +188,14 @@ class MainController extends Controller
         /** @var UssdActivity $activity */
         $activity = new $className($this->request, $this->response, $this->session);
 
+        $className = $activity->next();
+        $activity = new $className($this->request, $this->response, $this->session);
+
         // Handle back action
-        if ($this->request->Message != env('USSD_BACK_CODE', '#')) {
-            $className = $activity->next();
-            $activity = new $className($this->request, $this->response, $this->session);
-        }
+//        if ($this->request->Message != env('USSD_BACK_CODE', '#')) {
+//            $className = $activity->next();
+//            $activity = new $className($this->request, $this->response, $this->session);
+//        }
 
         return $activity->run();
     }

@@ -115,7 +115,7 @@ class MainController extends Controller
         } catch (Exception $e) {
 
             // Let's log the error first
-            \Log::error($e->getMessage(), $e->getTrace());
+            \Log::error($e->getMessage() . PHP_EOL . $e->getTraceAsString());
 
             // ... then we inform the user
             $this->response->Type = UssdResponse::RELEASE;

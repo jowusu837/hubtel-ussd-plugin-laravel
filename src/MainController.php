@@ -15,8 +15,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Exception;
 
-class MainController extends Controller
-{
+class MainController extends Controller {
+
     /**
      * Next ussd response to be sent
      * @var UssdResponse
@@ -52,15 +52,14 @@ class MainController extends Controller
      * Create a new controller instance.
      * @param Request $request
      */
-    public function __construct(Request $request)
-    {
+    public function __construct(Request $request) {
         $this->cache = Cache::store(env('USSD_SESSION_CACHE_DRIVER', 'file'));
 
         // Let's instantiate our next response
         $this->response = new UssdResponse();
 
         // Set request
-        $this->request = (object)$request->json()->all();
+        $this->request = (object) $request->json()->all();
         $this->sessionId = 'hubtel_ussd_session_' . $this->request->SessionId;
 
         // Check if cache is set
@@ -72,8 +71,7 @@ class MainController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index()
-    {
+    public function index() {
         try {
 
             switch ($this->request->Type) {
@@ -101,7 +99,6 @@ class MainController extends Controller
                 default:
                     throw new Exception("Unknown request");
                     break;
-
             }
 
             // Session might have changed during activity:
@@ -111,7 +108,6 @@ class MainController extends Controller
             $this->response = $activity->getResponse();
 
             return $this->sendResponse();
-
         } catch (Exception $e) {
 
             // Let's log the error first
@@ -129,8 +125,7 @@ class MainController extends Controller
      *
      * @return mixed|null
      */
-    protected function retrieveSession()
-    {
+    protected function retrieveSession() {
         if ($this->cache->has($this->sessionId)) {
             return $this->cache->get($this->sessionId);
         }
@@ -144,8 +139,7 @@ class MainController extends Controller
      * @param array $data
      * @return void
      */
-    protected function updateSession($data = [])
-    {
+    protected function updateSession($data = []) {
 
         $oldSessionData = $this->retrieveSession();
 
@@ -156,6 +150,11 @@ class MainController extends Controller
         $this->cache->put($this->sessionId, $updatedData, $expiresAt);
 
         $this->session = $updatedData;
+        
+        if(config('hubtel-ussd.log_session')){
+            logger("---------- USSD session -------");
+            logger($this->session);
+        }
     }
 
     /**
@@ -163,16 +162,15 @@ class MainController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    private function sendResponse()
-    {
+    private function sendResponse() {
         return response()->json($this->response);
     }
 
     /**
+     * Initiation request
      * @return UssdActivity|void
      */
-    private function processInitiationRequest()
-    {
+    private function processInitiationRequest() {
         $className = config('hubtel-ussd.home', HomeActivity::class);
 
         /** @var UssdActivity $activity */
@@ -181,27 +179,24 @@ class MainController extends Controller
         return $activity->run();
     }
 
-    private function processResponseRequest()
-    {
+    /**
+     * Response request
+     * @return type
+     */
+    private function processResponseRequest() {
         $className = $this->session['activity'];
-
-        /** @var UssdActivity $activity */
-        $activity = new $className($this->request, $this->response, $this->session);
-
-        $className = $activity->next();
         $activity = new $className($this->request, $this->response, $this->session);
 
         // Handle back action
-//        if ($this->request->Message != env('USSD_BACK_CODE', '#')) {
-//            $className = $activity->next();
-//            $activity = new $className($this->request, $this->response, $this->session);
-//        }
+        if (trim($this->request->Message) != env('USSD_BACK_CODE', '#')) {
+            $className = $activity->next();
+            $activity = new $className($this->request, $this->response, $activity->getSession());
+        }
 
         return $activity->run();
     }
 
-    private function processReleaseRequest()
-    {
+    private function processReleaseRequest() {
         $className = config('hubtel-ussd.release', ReleaseActivity::class);
 
         /** @var UssdActivity $activity */
@@ -210,8 +205,7 @@ class MainController extends Controller
         return $activity->run();
     }
 
-    private function processTimeoutRequest()
-    {
+    private function processTimeoutRequest() {
         $className = config('hubtel-ussd.timeout', TimeOutActivity::class);
 
         /** @var UssdActivity $activity */
@@ -220,8 +214,7 @@ class MainController extends Controller
         return $activity->run();
     }
 
-    private function processHijackSessionRequest()
-    {
+    private function processHijackSessionRequest() {
         $className = config('hubtel-ussd.hijack_session', HijackSessionActivity::class);
 
         /** @var UssdActivity $activity */
@@ -229,4 +222,5 @@ class MainController extends Controller
 
         return $activity->run();
     }
+
 }

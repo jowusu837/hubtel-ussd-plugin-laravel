@@ -76,4 +76,36 @@ class UssdActivity implements IUssdActivity
     {
         return $this->session;
     }
+    
+    protected function setReleaseResponse($message) {
+        $this->response->Type = \Jowusu837\HubtelUssd\Lib\UssdResponse::RELEASE;
+        $this->response->Message = $message;
+        return $this;
+    }
+    
+    /**
+     * Returns the subcode provided by the user.
+     * E.g. A user dials *1234*1# and service code is *1234#, will return 1
+     *
+     * @return string
+     * @throws \Exception
+     */
+    protected function getSubCode() {
+        $code = config('hubtel-ussd.code', false);
+
+        // check if code is set
+        if(!$code){
+            throw new \Exception('Please set your application code in hubtel-ussd config!');
+        }
+
+        $ussd_code_length = count(explode('*', $code));
+        $request_message_length = count(explode('*', trim($this->request->Message)));
+
+        // We always expect request message to be longer than ussd code if subcode is required:
+        if (!($request_message_length > $ussd_code_length)) {
+            return false;
+        }
+
+        return rtrim(array_last(explode('*', trim($this->request->Message))), '#');
+    }
 }

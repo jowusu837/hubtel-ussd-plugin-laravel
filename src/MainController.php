@@ -115,7 +115,7 @@ class MainController extends Controller {
 
             // ... then we inform the user
             $this->response->Type = UssdResponse::RELEASE;
-            $this->response->Message = "Oops! Something isn't right. Please try again later.";
+            $this->response->Message = env('APP_DEBUG', false) ? $e->getMessage() : "Oops! Something isn't right. Please try again later.";
             return $this->sendResponse();
         }
     }
@@ -151,7 +151,7 @@ class MainController extends Controller {
 
         $this->session = $updatedData;
         
-        if(config('hubtel-ussd.log_session')){
+        if(env('APP_DEBUG', false)){
             logger("---------- USSD session -------");
             logger($this->session);
         }
